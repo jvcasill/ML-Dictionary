@@ -24,6 +24,10 @@ class mld_Dictionary {
 	
 	// The WP_Query Object
 	private $query;
+	private $reverse_query;
+	
+	private $args;
+	private $reverse_args;
 	
 	// The Retrieved Translations
 	public $translations = false;
@@ -263,7 +267,10 @@ class mld_Dictionary {
 	public function get_translations( $approval_status = false, $moderator_languages = false ) {
 		
 		global $wpdb;
+		
+		$has_reverse_results = false;
 		$meta_query = array();
+		$meta_query_reverse_lookup = array();
 		
 		if ( is_numeric($approval_status) ) {
 			$this->approval_status = $approval_status;
@@ -290,6 +297,7 @@ class mld_Dictionary {
 
 		} else {
 		// General search with Source Language and Translation Language set
+		
 			if ( is_numeric($this->source_language['id']) ) {
 			
 				$source_language_meta_query = array(
@@ -311,8 +319,42 @@ class mld_Dictionary {
 				$meta_query[] = $translation_language_meta_query;
 				
 			}
-		}
 			
+			// Reverse language lookup
+			if ( is_numeric($this->translation_language['id']) && is_numeric($this->source_language['id']) ) {
+			
+				$reverse_translation_language_meta_query = array(
+					'key' => '_mld_translation_language',
+					'value' => $this->source_language['id'],
+					'compare' => '=',
+				);
+				$meta_query_reverse_lookup[] = $reverse_translation_language_meta_query;
+			
+				$reverse_source_language_meta_query = array(
+					'key' => '_mld_source_language',
+					'value' => $this->translation_language['id'],
+					'compare' => '=',
+				);
+				$meta_query_reverse_lookup[] = $reverse_source_language_meta_query;
+				
+				$reverse_approval_meta_query = array(
+					'key' => '_mld_approved',
+					'value' => '1',
+					'compare' => '=',
+				);
+				$meta_query_reverse_lookup[] = $reverse_approval_meta_query;
+				
+				$reverse_term_meta_query = array(
+					'key' => '_mld_translation',
+					'value' => $this->term['name'],
+					'compare' => '=',
+				);
+				$meta_query_reverse_lookup[] = $reverse_term_meta_query;
+				
+			}
+			
+		}
+							
 		if ( is_numeric($this->approval_status) ) {
 
 			$approval_meta_query = array(
@@ -331,12 +373,46 @@ class mld_Dictionary {
 			'order' => 'ASC',
 			'posts_per_page' => -1
 		);
+
+		$this->reverse_args = array( 
+			'post_type' => 'mld_translation', 
+			'meta_query' => $meta_query_reverse_lookup,
+			'orderby' => 'title', 
+			'order' => 'ASC',
+			'posts_per_page' => -1
+		);
 		
 		if ( $this->term ) {
 			
 			$post_ids = $wpdb->get_col("select ID from $wpdb->posts where post_title = '".$this->term['name']."' AND post_type = 'mld_translation' ");
+			
+			// For front-end search, when there is at least one exact match, include reverse language translations as well
+			if ( !$moderator_languages ) {
+
+				$this->reverse_query = new WP_Query($this->reverse_args);
+				
+				if ( $this->reverse_query->have_posts() ) {
+					
+					$has_reverse_results = true;
+					
+					while ( $this->reverse_query->have_posts() ) {
+		
+						$this->reverse_query->the_post();
+						$post_ids[] = "".$this->reverse_query->post->ID."";
+						
+					}
+										
+					// Reset post
+					wp_reset_postdata();	
+					
+				}
+
+			}
+
 			if ( $post_ids ) {
+			
 				$this->exact_match = true;
+													
 			} else {
 				$post_ids = $wpdb->get_col("select ID from $wpdb->posts where post_title LIKE '".$this->term['name']."%' AND post_type = 'mld_translation' ");
 			} 
@@ -356,10 +432,26 @@ class mld_Dictionary {
 		$this->query = new WP_Query($this->args);
 		
 		if ( $this->query->have_posts() ) {
+
 			$this->translations = $this->query;
+
+			if ( $has_reverse_results ) {
+				$this->translations->posts = array_merge ( $this->translations->posts, $this->reverse_query->posts );
+				$this->translations->post_count = $this->translations->post_count + $this->reverse_query->post_count;
+			}
+
 			// Get Votes
 			$this->calculate_votes();
 			return true;
+
+		} elseif ( $has_reverse_results ) {
+
+			$this->translations = $this->reverse_query;
+
+			// Get Votes
+			$this->calculate_votes();
+			return true;
+
 		} else {
 			$this->translations = false;
 			return false;
@@ -369,6 +461,7 @@ class mld_Dictionary {
 		wp_reset_postdata();	
 	
 	}
+	
 
 /**
  * Calculate Translation Votes
@@ -604,11 +697,24 @@ class mld_Dictionary {
 			$term_definition = get_the_content();
 						
 			echo '<div class="mld-result">';
-									
-			echo '<p class="mld-languages">'.$this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name'].' &raquo;
+			
+			// If it's a reverse term, reverse the display of the name and languages
+			if ( $post_meta['_mld_source_language'][0] != $this->source_language['id'] ) {
+				echo '<p class="mld-languages">'.$this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name'].' &raquo;
+							  '.$this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name'].'</p>';
+			} else {									
+				echo '<p class="mld-languages">'.$this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name'].' &raquo;
 							  '.$this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name'].'</p>';
-							  
-			echo '<span class="mld-term-title">'.$post_meta['_mld_translation'][0].'</span> ('.$this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name'].': '.get_the_title().') <hr/>';
+			}
+			
+			// If it's a reverse term, reverse the display of the name and languages
+			if ( $post_meta['_mld_source_language'][0] != $this->source_language['id'] ) {
+				echo '<span class="mld-term-title">'.get_the_title().'</span> 
+				      ('.$this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name'].': '.$post_meta['_mld_translation'][0].') <hr/>';
+			} else {
+				echo '<span class="mld-term-title">'.$post_meta['_mld_translation'][0].'</span> 
+				      ('.$this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name'].': '.get_the_title().') <hr/>';
+			}
     
 			// Votes
 	

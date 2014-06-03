@@ -15,14 +15,12 @@
         <div class="mld_no_wrap">
         
             <select id="mld_source_language" name="mld_source_language" class="mld_select form-control mld_source_language">
-                <option class="mld_desktop" value="false">Source Language</option>
-                <option class="mld_mobile" value="false">SL</option>
+                <option class="mld_source_lang_change" value="false">Source Language</option>
                 <?php $GLOBALS['mld_dictionary']->display_languages_select_options_front( 'source_language' ); ?>                    
             </select>
             
             <select id="mld_translation_language" name="mld_translation_language" class="mld_select form-control mld_translation_language">
-                <option class="mld_desktop" value="false">Target Language</option>
-                <option class="mld_mobile" value="false">TL</option>
+                <option class="mld_translation_lang_change" value="false">Target Language</option>
                 <?php $GLOBALS['mld_dictionary']->display_languages_select_options_front( 'translation_language' ); ?>                    
             </select>
             

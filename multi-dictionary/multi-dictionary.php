@@ -3,7 +3,7 @@
    Plugin Name: Multilingual Dictionary
    Plugin URI: http://www.lingreference.org
    Description: A multilingual dictionary providing translations of terms between languages along with a user-based voting system for ranking the most appropriate translations.
-   Version: 1.1
+   Version: 1.1.2
    Author: Joseph Casillas and Zachary Coyne
    Author URI: http://www.lingreference.org
    License: GPL2
@@ -11,6 +11,16 @@
    Text Domain: multilingual-dictionary
    Function & Post Type Prefix: mld_
    */   
+   
+   /**
+    * Release Notes
+	*/ 
+   
+   /* 1.1.2
+    *
+	* 1. Include "Reverse" translation for front-end display (ex. for Eng/Span Green->Verde also include Span/Eng Verde->Green submissions.
+	*
+	*/
    
 
 /**

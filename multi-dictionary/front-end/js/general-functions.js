@@ -1,5 +1,7 @@
 jQuery(document).ready(function() {
 								
+	update_form_fields_for_mobile();
+								
 	jQuery('.mld_submit').click(function(event) {
 	
 		event.preventDefault();
@@ -41,3 +43,33 @@ jQuery(document).ready(function() {
 	});
 									
 });
+
+jQuery( window ).resize(function() {
+
+	update_form_fields_for_mobile();
+
+});
+
+function update_form_fields_for_mobile() {
+
+	var viewport_width = jQuery(window).width();
+	var mld_source_lang_select_text = jQuery('.mld_source_lang_change').html();
+	var mld_translation_lang_select_text = jQuery('.mld_translation_lang_change').html();
+	
+	if ( viewport_width < 500 ) {
+		
+		if ( mld_source_lang_select_text == 'Source Language' ) {
+			jQuery('.mld_source_lang_change').html('SL');
+			jQuery('.mld_translation_lang_change').html('TL');
+		}
+		
+	} else {
+
+		if ( mld_source_lang_select_text == 'SL' ) {
+			jQuery('.mld_source_lang_change').html('Source Language');
+			jQuery('.mld_translation_lang_change').html('Target Language');
+		}
+
+	}
+
+}
