@@ -302,6 +302,7 @@ if ( $mld_users->moderators ) {
         <p>To use this feature, store each translation as a <em>single row</em> in a CSV file with the column structure oulined below.<br/><br/>
         	<strong>Column Delimiter:</strong> <span style="margin: 0 15px;">,</span> (Comma)<br/>
             <strong>Text Delimiter:</strong> <span style="margin: 0 15px;">"</span> (Apostophe)<br/>
+            <strong>Encoding:</strong> <span style="margin: 0 15px;">UTF-8</span><br/>
         </p>
         
         <hr />
