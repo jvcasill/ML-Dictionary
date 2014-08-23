@@ -50,6 +50,43 @@ if ( isset( $_GET['delete-language'] ) ) {
 } 
 
 /**
+ * Add Part of Speech
+ */ 
+ 
+if ( isset( $_POST['mld_add_part_speech__nonce'] ) ) {
+
+	if ( isset( $_POST['part_speech_name'] ) ) {
+		$part_speech_name = sanitize_text_field( $_POST['part_speech_name'] );
+		
+		$part_speech = array(
+  			'post_title' => $part_speech_name,
+			'post_type' => 'mld_part_speech',
+			'post_status' => 'publish',
+		);
+
+		if ( strlen($part_speech_name) > 0) {
+			$part_speech_id = wp_insert_post( $part_speech );
+		}
+	}
+
+}
+
+/**
+ * Delete Part of Speech
+ */ 
+ 
+if ( isset( $_GET['delete-part-speech'] ) ) {
+	
+	$delete = (int) $_GET['delete-part-speech'];
+	$part_speech_type = get_post_type( $delete );
+	
+	if ( $part_speech_type == 'mld_part_speech') {
+		wp_delete_post( $delete, true );
+	}
+	
+} 
+
+/**
  * Add Field
  */ 
  
@@ -146,20 +183,6 @@ if ( isset( $_POST['mld_update_moderators__nonce'] ) ) {
 	
 }
 
-/**
- * Import Translations
- */ 
- 
-if ( isset( $_POST['mld_mld_import_csv__nonce'] ) ) {
-
-	if ( isset($_POST['mld_csv_heading']) && $_POST['mld_csv_heading'] == 'true') {
-		mld_upload_csv($_FILES['mld_csv'], true);
-	} else {
-		mld_upload_csv($_FILES['mld_csv'], false);
-	}
-	
-}
-
 ?>
 
 <div id="mld-admin" class="width-85">
@@ -199,6 +222,39 @@ if ( isset( $_POST['mld_mld_import_csv__nonce'] ) ) {
         
         </form>
     
+    </div>
+
+    <div class="box">
+        <h2>Part of Speech</h2>
+    
+    	<ul>
+<?php
+
+		// Show the part of speech
+		$args = array( 'post_type' => 'mld_part_speech', 'orderby' => 'title', 'order' => 'ASC' );
+		$fields_query = new WP_Query( $args );
+	
+		if ( $fields_query->have_posts() ) {
+			while ( $fields_query->have_posts() ) {
+				$fields_query->the_post();
+				echo '<li>'.get_the_title();
+				echo '<a class="mld-delete" data-type="part of speech" href="'.$page_slug.'&amp;delete-part-speech='.$fields_query->post->ID.'"></a></li>';
+			}
+		}
+?>
+		</ul>
+<?php		
+		// Add a new part of speech
+?>    
+        <form id="mld_add_part_speech" name="mld_add_part_speech" action="<?php echo $page_slug; ?>" method="post" enctype="multipart/form-data">
+        
+            <h3>Add a Part of Speech</h3>
+            <input type="hidden" name="mld_add_part_speech__nonce" value="add" />
+            <label for="field_name">Part of Speech:</label> <input type="text" name="part_speech_name" /><br/>
+            <p class="center"><input class="button" type="submit" value="Add Part of Speech" /></p>
+        
+        </form>
+        
     </div>
 
     <div class="box">
@@ -295,58 +351,5 @@ if ( $mld_users->moderators ) {
         <p><br/><strong>Note:</strong> To add a new dictionary moderator, <a href="<?php echo get_bloginfo('url'); ?>/wp-admin/user-new.php">add a new Wordpress user</a> and select "Dictionary Moderator" as the user's role.</p>
 
 	</div>   
-    
-    <div class="box">
-        <h2>Import Translations from CSV</h2>
-        
-        <p>To use this feature, store each translation as a <em>single row</em> in a CSV file with the column structure oulined below.<br/><br/>
-        	<strong>Column Delimiter:</strong> <span style="margin: 0 15px;">,</span> (Comma)<br/>
-            <strong>Text Delimiter:</strong> <span style="margin: 0 15px;">"</span> (Apostophe)<br/>
-            <strong>Encoding:</strong> <span style="margin: 0 15px;">UTF-8</span><br/>
-        </p>
-        
-        <hr />
-        
-        <h3>CSV Column Structure</h3>
-        
-        <ul>
-        	<li><strong>Term*</strong> (String, English)</li>
-            <li><strong>Translation*</strong> (String)</li>
-            <li><strong>Source Language*</strong> (Language ID or Language Name in English)</li>
-            <li><strong>Translation Language*</strong> (Language ID or Language Name in English)</li>
-            <li><strong>Field</strong> (Field ID or Feild Name)</li>
-            <li><strong>Definition*</strong> (String, English)</li>
-            <li><strong>Sources</strong> (String(s), English, <strong style="color: #009900;">Source | Source Type ID or Name</strong>, || Delimited)<br/>
-            	<span style="display: block; margin-top: 10px; font-size: .9em;">
-               		<strong>Note:</strong> The "Source" and the "Source Type" are separated by bar character "|", and each set of these is separated by a double bar "||"
-                </span>
-            </li>
-            <li><strong>Usage Examples</strong> (String(s), English, || Delimited)<br/>
-                <span style="display: block; margin-top: 10px; font-size: .9em;">
-                    <strong>Note:</strong> Each usage example is separated by a double bar "||"
-                </span>
-            <li><strong>Notes</strong> (String, English)</li>
-        </ul>
-        
-        <p style="padding-top: 15px;"><a download href="<?php echo plugins_url(); ?>/multi-dictionary/admin/misc/example-translation-import.csv">Click here</a> to download an <a download href="<?php echo plugins_url(); ?>/multi-dictionary/admin/misc/example-translation-import.csv">example CSV file</a>.</p>
-                         
-        <form id="mld_import_csv" name="mld_import_csv" action="<?php echo $page_slug; ?>" method="post" enctype="multipart/form-data">
- 
-         	<hr />
-             
-        	<input type="hidden" name="mld_mld_import_csv__nonce" value="update" />
-            
-            <p style="margin: 0; padding: 15px 0 5px 0;">Check the following box if your CSV has a heading as the first row.  If the first row contains a translation, leave unchecked.</p>
-            
-            <label for="mld_csv_heading">CSV Has Heading Row:</label> <input type="checkbox" name="mld_csv_heading" value="true" /><br/>
-        
-        	<label for="mld_csv">Select your file:</label> <input type="file" name="mld_csv" id="mld_csv" />
-        
-            <p class="center"><input class="button" type="submit" value="Import Translations" /></p>
-
-        </form>        
-
-	</div>    
-     
-    
+      
 </div>

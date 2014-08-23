@@ -1,2 +1,3 @@
-"Green","Verde","English","Spanish","Morphology","My term definition.","http://www.google.com|Website||Some Book Name|Book","Usage example 1 || Usage Example 2","These are my notes."
-"Blue","Azul","English","Spanish","Syntax","The color of the sky.","Colors of the Rainbow|Book","The sky is blue.","Notes about blue."
+"Term","Translation","Source Language","Translation Language","Part of Speech","Field","English Definition","Source Language Definition","Target Language Definition","Sources","Usage Examples","Notes","User","Display Author"
+"Green","Verde","English","Spanish","Noun","Morphology","The color of grass.",,"Spanish definition of green.","http://www.google.com|Website||Some Book Name|Book","Usage example 1 || Usage Example 2","These are my notes.",,0
+"Blue","Azul","Spanish","Portuguese","Verb","Syntax","The color of the sky.","Spanish definition of blue.","Portuguese definition of blue.","Colors of the Rainbow|Book","The sky is blue.","Notes about blue.",15,1

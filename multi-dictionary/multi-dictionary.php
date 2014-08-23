@@ -3,7 +3,7 @@
    Plugin Name: Multilingual Dictionary
    Plugin URI: http://www.lingreference.org
    Description: A multilingual dictionary providing translations of terms between languages along with a user-based voting system for ranking the most appropriate translations.
-   Version: 1.1.2
+   Version: 1.1.3
    Author: Joseph Casillas and Zachary Coyne
    Author URI: http://www.lingreference.org
    License: GPL2
@@ -19,6 +19,16 @@
    /* 1.1.2
     *
 	* 1. Include "Reverse" translation for front-end display (ex. for Eng/Span Green->Verde also include Span/Eng Verde->Green submissions.
+	*
+	*/
+
+   /* 1.1.3
+    *
+	* 1. Added part of speech dropdown (noun, adjective, verb, adverb)
+	* 2. Added 'Source language definition' and 'Target language definition' (optional entries)
+	* 3. Added Submitted by option (checkbox user can click to show their name with the entry)
+	* 4. Added Total terms count shortcode: [mld_total_term_count /]
+	* 5. Added TSV Import
 	*
 	*/
    
@@ -165,9 +175,16 @@ function mld_load_dictionary_voting() {
 
 
 /**
+* Achievements Plugin Integration
+*/ 
+include_once ( dirname(__FILE__) . '/includes/achievements.php' );
+
+
+/**
 * Dictionary Shortcodes
 */ 
 include_once ( dirname(__FILE__) . '/includes/shortcodes.php' );
+
 
 /**
 * Register Admin JS & CSS
@@ -219,6 +236,11 @@ function mld_custom_title($title) {
 	}
 }
 add_filter('wp_title', mld_custom_title, 100);
+
+/**
+* Allow shortcodes to work in sidebar
+*/ 
+add_filter('widget_text', 'do_shortcode');
 
 /**
  * Install, Deactivate and Uninstall Hooks

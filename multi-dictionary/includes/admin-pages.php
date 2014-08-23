@@ -73,20 +73,17 @@ function mld_settings_admin_page() {
 }
 
 /**
- * Create Translations Admin Page
+ * Create Import Admin Page
  */
  
-/*
+add_action( 'admin_menu', 'register_mld_import_admin_page' );
 
-Remove this and use it as the main plugin page.
-
-add_action( 'admin_menu', 'register_mld_translations_admin_page' );
-
-function register_mld_translations_admin_page(){
-	add_submenu_page( 'mld-admin', 'ML Dictionary Translations', 'View Translations', 'manage_options', 'mld-translations', 'mld_translations_admin_page' );
+function register_mld_import_admin_page(){
+	if ( is_super_admin() ) {
+		add_submenu_page( 'mld-admin', 'ML Dictionary Translations Import', 'Import', 'mld_moderate', 'mld-import', 'mld_import_admin_page' );
+	}
 }
 
-function mld_translations_admin_page() {
-	include_once (dirname(__FILE__) . '/admin-pages/translations.php');
+function mld_import_admin_page() {
+	include_once (dirname(__FILE__) . '/admin-pages/import.php');
 }
-*/

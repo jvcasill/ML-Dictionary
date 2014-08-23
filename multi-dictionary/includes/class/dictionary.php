@@ -10,13 +10,18 @@ class mld_Dictionary {
 	// Customized "Settings" Set in Admin
 	public $languages = false;
 	public $fields = false;
+	public $parts_speech = false;
 	public $source_types = false;
+	
+	// Imported Terms
+	public $batch_id = false;
 	
 	// Term/Search Criteria
 	public $term = false;
 	public $source_language = false;
 	public $translation_language = false;
 	public $approval_status = false;
+	public $sort_order = false;
 	
 	// Whether or not a search has been made
 	public $search = false;
@@ -121,6 +126,40 @@ class mld_Dictionary {
 			
 		} else {
 			$this->fields = false;
+		}
+		
+		// Reset post
+		wp_reset_postdata();	
+
+	// Load Parts of Speech
+	
+		$this->args = array( 
+			'post_type' => 'mld_part_speech', 
+			'orderby' => 'title', 
+			'order' => 'ASC',
+			'post_status' => 'any'
+		);
+		
+		$this->query = new WP_Query($this->args);
+		
+		if ( $this->query->have_posts() ) {
+
+			$this->parts_speech = array( 'name_index' => array(), 'id_index' => array() );
+
+			while ( $this->query->have_posts() ) {
+				
+				$this->query->the_post();
+				
+				$part_speech_name = get_the_title();
+				$part_speech_name_lowercase = strtolower($part_speech_name);
+				
+				$this->parts_speech['id_index'][$this->query->post->ID] = $part_speech_name;
+				$this->parts_speech['name_index'][$part_speech_name_lowercase] = $this->query->post->ID;
+				
+			}
+			
+		} else {
+			$this->parts_speech = false;
 		}
 		
 		// Reset post
@@ -369,10 +408,33 @@ class mld_Dictionary {
 		$this->args = array( 
 			'post_type' => 'mld_translation', 
 			'meta_query' => $meta_query,
-			'orderby' => 'title', 
-			'order' => 'ASC',
 			'posts_per_page' => -1
 		);
+		
+		// Set the Sort Order
+		if ( $this->sort_order ) {
+			switch ($this->sort_order) {
+				case (2):
+					$this->args['orderby'] = 'title';
+					$this->args['order'] = 'DESC';
+					break;
+				case (3):
+					$this->args['orderby'] = 'date';
+					$this->args['order'] = 'ASC';
+					break;
+				case (4):
+					$this->args['orderby'] = 'date';
+					$this->args['order'] = 'DESC';
+					break;
+				default:
+					$this->args['orderby'] = 'title';
+					$this->args['order'] = 'ASC';
+					break;
+			}
+		} else {
+			$this->args['orderby'] = 'title';
+			$this->args['order'] = 'ASC';
+		}
 
 		$this->reverse_args = array( 
 			'post_type' => 'mld_translation', 
@@ -382,12 +444,23 @@ class mld_Dictionary {
 			'posts_per_page' => -1
 		);
 		
-		if ( $this->term ) {
+		// Batch Import
+		if ($this->batch_id) {
+			$the_import = get_post( $this->batch_id );
+			if ( $the_import ) {
+				$imported_ids = $the_import->post_content;
+				$imported_ids = explode(',',$imported_ids);
+			} else {
+				$this->batch_id = false;
+			}
+		}
+		
+		if ( $this->term && !$this->batch_id ) {
 			
 			$post_ids = $wpdb->get_col("select ID from $wpdb->posts where post_title = '".$this->term['name']."' AND post_type = 'mld_translation' ");
 			
 			// For front-end search, when there is at least one exact match, include reverse language translations as well
-			if ( !$moderator_languages ) {
+			if ( !$moderator_languages && !is_admin() ) {
 
 				$this->reverse_query = new WP_Query($this->reverse_args);
 				
@@ -426,6 +499,10 @@ class mld_Dictionary {
 			} else {
 				return false;
 			}
+			
+		} elseif ( $this->batch_id ) {
+			
+			$this->args['post__in'] = $imported_ids;
 			
 		}
 		
@@ -627,12 +704,32 @@ class mld_Dictionary {
 						  	  <label>Translation:</label> '.$post_meta['_mld_translation'][0].'
 						  </p>
 						  <p>
+						  	  <label>Part of Speech:</label> '.$this->parts_speech['id_index'][$post_meta['_mld_part_speech'][0]].'
+						  </p>
+						  <p>
 						  	  <label>Field:</label> '.$this->fields['id_index'][$post_meta['_mld_field'][0]].'
 						  </p>
 						  <p>
-						  	  <label>Definition:</label> '.get_the_content().'
-						  </p>
-						  <p>
+						  	  <label>English Definition:</label> '.get_the_content().'
+						  </p>';
+						  
+				if ( strtolower($this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name']) != 'english' ) {		  
+						  
+					echo '<p>
+						  	  <label>'.$this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name'].' Definition:</label> '.$post_meta['_mld_source_language_definition'][0].'
+						  </p>';
+					
+				}
+				
+				if ( strtolower($this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name']) != 'english' ) {		  
+						  
+					echo '<p>
+						  	  <label>'.$this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name'].' Definition:</label> '.$post_meta['_mld_target_language_definition'][0].'
+						  </p>';
+					
+				}		  
+						  
+					echo '<p>
 						 	  <label>Notes:</label> '.$post_meta['_mld_notes'][0].'
 						  </p>
 						  <p>
@@ -658,11 +755,20 @@ class mld_Dictionary {
 					echo '</ol>';
 				}
 						  
-				echo'       </p>
+				echo '      </p>';
+				
+				$author_display = get_the_author();
+				if ( $post_meta['_mld_display_author'][0] != '1' ) {
+					$author_display.= ' <em>(Anonymous on website)</em>';
+				}
+				
+				echo '		<p>
+								<label>Submitted by:</label> '.$author_display.'
+							</p>
 				
 	
 							<p class="mld_vote_block">
-							    <strong>Votes:</strong> <span>'.$this->translations->post->vote_percentage.'%</span> ('.$this->translations->post->vote_count_up.' / '.$this->translations->post->vote_count_total.')				
+							    <label>Votes:</label> <span>'.$this->translations->post->vote_percentage.'%</span> ('.$this->translations->post->vote_count_up.' / '.$this->translations->post->vote_count_total.')				
 					        </p>';
 			
 			}
@@ -698,6 +804,12 @@ class mld_Dictionary {
 						
 			echo '<div class="mld-result">';
 			
+			// Check if there is a part of speech for this translation
+			$part_speech = '';
+			if ( strlen( $this->parts_speech['id_index'][$post_meta['_mld_part_speech'][0]] ) > 0 ) {
+				$part_speech = '<em>&mdash; '.$this->parts_speech['id_index'][$post_meta['_mld_part_speech'][0]].'</em>';
+			}						
+			
 			// If it's a reverse term, reverse the display of the name and languages
 			if ( $post_meta['_mld_source_language'][0] != $this->source_language['id'] ) {
 				echo '<p class="mld-languages">'.$this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name'].' &raquo;
@@ -710,10 +822,10 @@ class mld_Dictionary {
 			// If it's a reverse term, reverse the display of the name and languages
 			if ( $post_meta['_mld_source_language'][0] != $this->source_language['id'] ) {
 				echo '<span class="mld-term-title">'.get_the_title().'</span> 
-				      ('.$this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name'].': '.$post_meta['_mld_translation'][0].') <hr/>';
+				      ('.$this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name'].': '.$post_meta['_mld_translation'][0].') '.$part_speech.' <hr/>';
 			} else {
 				echo '<span class="mld-term-title">'.$post_meta['_mld_translation'][0].'</span> 
-				      ('.$this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name'].': '.get_the_title().') <hr/>';
+				      ('.$this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name'].': '.get_the_title().') '.$part_speech.' <hr/>';
 			}
     
 			// Votes
@@ -723,15 +835,33 @@ class mld_Dictionary {
 						  '.$this->translations->post->vote_count_up.'<a title="Vote for this term." href="'.strtok($_SERVER['REQUEST_URI']).'?mld_upvote='.$this->translations->post->ID.'"><img class="mld_vote_thumb mld_thumb_up" src="'.plugins_url().'/multi-dictionary/images/thumb-up.png" alt="Vote Up" /></a>
 						  '.$this->translations->post->vote_count_down.'<a title="Vote against this term." href="'.strtok($_SERVER['REQUEST_URI']).'?mld_downvote='.$this->translations->post->ID.'"><img class="mld_vote_thumb mld_thumb_down" src="'.plugins_url().'/multi-dictionary/images/thumb-down.png" alt="Vote Down" /></a>
 					  </div>';				
-	
+
 			if ( strlen( $this->fields['id_index'][$post_meta['_mld_field'][0]] ) > 0 ) {
 				echo '<p><label>Field:</label> '.$this->fields['id_index'][$post_meta['_mld_field'][0]].'</p>';
 			}			
 			
 			if ( strlen($term_definition) > 1 ) {
-				echo '<p><label>Definition:</label> '.$term_definition.'</p>';
+				echo '<p><label>English Definition:</label> '.$term_definition.'</p>';
 			}
 			
+			if ( strtolower($this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name']) != 'english' &&
+			     strlen($post_meta['_mld_source_language_definition'][0]) > 1 ) {		  
+					  
+				echo '<p>
+						  <label>'.$this->languages['id_index'][$post_meta['_mld_source_language'][0]]['name'].' Definition:</label> '.$post_meta['_mld_source_language_definition'][0].'
+					  </p>';
+				
+			}
+			
+			if ( strtolower($this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name']) != 'english' &&
+			     strlen($post_meta['_mld_target_language_definition'][0]) > 1 ) {		  
+					  
+				echo '<p>
+						  <label>'.$this->languages['id_index'][$post_meta['_mld_translation_language'][0]]['name'].' Definition:</label> '.$post_meta['_mld_target_language_definition'][0].'
+					  </p>';
+				
+			}		  
+		
 			if ( is_array($post_meta['_mld_usage_example']) ) {
 				echo '<p><label>Usage Examples:</label></p>';
 				echo '<ol>';
@@ -749,6 +879,12 @@ class mld_Dictionary {
 				}	  
 				echo '</ol>';
 			}
+			
+			if ( $post_meta['_mld_display_author'][0] == '1' ) {
+				$author_display = get_the_author();
+				echo '<p><label>Submitted by:</label> '.$author_display.'</p>';
+			}
+
 							
 			echo '</div>';
 		}
@@ -807,6 +943,26 @@ class mld_Dictionary {
 	}	
 
 /**
+ * Parts of Speech Select Options
+ */
+
+	public function display_parts_speech_select_options( $selected_part_speech = false ) {
+		
+		if ( !$this->parts_speech ) {
+			return false;
+		}
+		
+		foreach ( $this->parts_speech['id_index'] as $key => $part_speech ) {
+			if ( $selected_part_speech == $key || strtolower($selected_part_speech) == $part_speech ) {
+				echo '<option selected value="'.$key.'">'.$part_speech.'</option>'."\n";
+			} else {
+				echo '<option value="'.$key.'">'.$part_speech.'</option>'."\n";
+			}
+		}
+		
+	}	
+
+/**
  * Fields Select Options
  */
 
@@ -845,6 +1001,57 @@ class mld_Dictionary {
 		}
 		
 	}	
+	
+/**
+ * Return total count of approved terms
+ */
+
+	public function count_total_terms() {
+	
+		$this->get_approved();
+		return number_format( count($this->translations->posts) );
+	
+	}
+
+/**
+ * Creates Leaderboard
+ */
+
+	public function create_leaderboard() {
+	
+		$output_html = '<table class="mld-leaderboard"><tbody><tr class="heading-row"><td>#</td><td>Name</td><td>Submissions</td></tr>';
+	
+		$this->get_approved();
+		$authors = array();
+		
+		foreach ($this->translations->posts as $id => $post) {
+		
+			$author_id = $post->post_author;
+			if ( array_key_exists($author_id, $authors) ) {
+				$authors[$author_id]++;
+			} else {
+				$authors[$author_id] = 1;
+			}
+		
+		}
+		
+		// Order Authors by number of contributions
+		arsort($authors);
+		$count = 1;
+		
+		foreach ( $authors as $author_id => $term_count ) {
+			if ($count > 10) {
+				continue;
+			}
+			$author_name = get_the_author_meta( 'user_nicename', $author_id );
+			$output_html.= '<tr><td>'.$count.'</td><td>'.$author_name.'</td><td>'.$term_count.'</td></tr>';
+			$count++;
+		}
+		$output_html.= '</tbody></table>';
+				
+		return $output_html;
+	
+	}
 
 
-}
+} // End Class

@@ -71,7 +71,16 @@ if ( isset($_POST['mld_search__nonce']) ) {
 		$mld_dictionary->approval_status = $approval_status;
 		$page_slug.= '&amp;mld_a='.$approval_status;
 	}
-	
+	// Set the sort order
+	if ( is_numeric($_POST['mld_order_by']) ) {
+		$sort_order = (int) $_POST['mld_order_by'];
+		$mld_dictionary->sort_order = $sort_order;
+		$page_slug.= '&amp;mld_sort='.$sort_order;
+	} else {
+		$mld_dictionary->sort_order = 1;
+		$page_slug.= '&amp;mld_sort=1';
+	}
+
 } elseif ( isset($_GET['search']) ){
 	
 	$mld_dictionary->search = true;
@@ -99,6 +108,22 @@ if ( isset($_POST['mld_search__nonce']) ) {
 		$mld_dictionary->approval_status = $approval_status;
 		$page_slug.= '&amp;mld_a='.$approval_status;
 	}	
+	// Set the sort order
+	if ( is_numeric($_POST['mld_sort']) ) {
+		$sort_order = (int) $_GET['mld_sort'];
+		$mld_dictionary->sort_order = $sort_order;
+		$page_slug.= '&amp;mld_sort='.$sort_order;
+	} else {
+		$mld_dictionary->sort_order = 1;
+		$page_slug.= '&amp;mld_sort=1';
+	}
+	// Import Batch ID
+	if ( isset($_GET['batch_id']) ) {
+		$batch_id = (int) $_GET['batch_id'];
+		$mld_dictionary->batch_id = $batch_id;
+		$page_slug.= '&amp;batch_id='.$batch_id;
+	}
+	
 }
 
 ?>
@@ -115,22 +140,31 @@ if ( isset($_POST['mld_search__nonce']) ) {
         	<p>
             	<label for="mld_term" class="mld_term">Term:</label>
                 <input type="text" id="mld_term" name="mld_term" class="mld_term" value="<?php if ($mld_dictionary->term) { echo $mld_dictionary->term['name']; } ?>" />
+ 
+                 <select id="mld_order_by" name="mld_order_by" class="mld_select">
+                	<option value="false">Order By</option>
+                    <option <?php mld_selected_if($mld_dictionary->sort_order, '1'); ?> value="1">Term Name (ASC)</option>
+                    <option <?php mld_selected_if($mld_dictionary->sort_order, '2'); ?>value="2">Term Name (DESC)</option>                    
+                    <option <?php mld_selected_if($mld_dictionary->sort_order, '3'); ?>value="3">Submit Date (ASC)</option>
+                    <option <?php mld_selected_if($mld_dictionary->sort_order, '4'); ?>value="4">Submit Date (DESC)</option>      
+                    <option <?php mld_selected_if($mld_dictionary->sort_order, '5'); ?>value="5">Votes %</option>                   
+              </select>
                 
                 <select id="mld_source_language" name="mld_source_language" class="mld_select">
                 	<option value="false">Source Language</option>
-                    <option value="false" <?php if ($mld_dictionary->search && !$mld_dictionary->source_language) { echo 'selected'; } ?>>&mdash; Any Language &mdash;</option>
+                    <option value="false" <?php if ($mld_dictionary->search && !$mld_dictionary->source_language) { echo 'selected'; } ?>>&mdash; Any Language</option>
 					<?php $mld_dictionary->display_languages_select_options($mld_dictionary->source_language['id']); ?>                    
                 </select>
                 
                 <select id="mld_translation_language" name="mld_translation_language" class="mld_select">
-                	<option value="false">Translation Language</option>
-                    <option value="false" <?php if ($mld_dictionary->search && !$mld_dictionary->translation_language) { echo 'selected'; } ?>>&mdash; Any Language &mdash;</option>
+                	<option value="false">Target Language</option>
+                    <option value="false" <?php if ($mld_dictionary->search && !$mld_dictionary->translation_language) { echo 'selected'; } ?>>&mdash; Any Language</option>
 					<?php $mld_dictionary->display_languages_select_options($mld_dictionary->translation_language['id']); ?>                    
                 </select>
               
                 <select id="mld_approval_status" name="mld_approval_status" class="mld_select">
                 	<option value="false">Approval Status</option>
-                    <option value="false" <?php if ($mld_dictionary->search && !$mld_dictionary->approval_status ) { echo 'selected'; } ?>>&mdash; Any Status &mdash;</option>
+                    <option value="false" <?php if ($mld_dictionary->search && !$mld_dictionary->approval_status ) { echo 'selected'; } ?>>&mdash; Any Status</option>
                     <option <?php mld_selected_if($mld_dictionary->approval_status, '0'); ?> value="0">Pending Approval</option>
                     <option <?php mld_selected_if($mld_dictionary->approval_status, '1'); ?> value="1">Approved</option>
                 </select>
@@ -144,7 +178,9 @@ if ( isset($_POST['mld_search__nonce']) ) {
 	// Show search results
 	if ( $mld_dictionary->search ) {
 		if ( $mld_dictionary->get_translations() ) {
-			$mld_dictionary->order_by_votes();
+			if ( $mld_dictionary->sort_order == 5 ) {
+				$mld_dictionary->order_by_votes();
+			}
 			$mld_dictionary->list_translations_admin_ul(true, $page_slug, $mld_moderators->moderator_assigned_langs );
 		} else {
 			echo '<p class="center mld_no_results">No search results found</p>';

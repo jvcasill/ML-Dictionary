@@ -176,3 +176,45 @@ function mld_source_type_init() {
 
 	register_post_type( 'mld_source_type', $args );
 }
+
+/**
+ * Register "Import" Post Type
+ */
+
+add_action( 'init', 'mld_import_init' );
+
+function mld_import_init() {
+	$labels = array(
+		'name'               => _x( 'Imports', 'post type general name', 'multilingual-dictionary' ),
+		'singular_name'      => _x( 'Import', 'post type singular name', 'multilingual-dictionary' ),
+		'menu_name'          => _x( 'Imports', 'admin menu', 'multilingual-dictionary' ),
+		'name_admin_bar'     => _x( 'Import', 'add new on admin bar', 'multilingual-dictionary' ),
+		'add_new'            => _x( 'Add New', 'mld_source_type', 'multilingual-dictionary' ),
+		'add_new_item'       => __( 'Add New Import', 'multilingual-dictionary' ),
+		'new_item'           => __( 'New Import', 'multilingual-dictionary' ),
+		'edit_item'          => __( 'Edit Import', 'multilingual-dictionary' ),
+		'view_item'          => __( 'View Import', 'multilingual-dictionary' ),
+		'all_items'          => __( 'All Imports', 'multilingual-dictionary' ),
+		'search_items'       => __( 'Search Imports', 'multilingual-dictionary' ),
+		'parent_item_colon'  => __( 'Parent Imports:', 'multilingual-dictionary' ),
+		'not_found'          => __( 'No imports found.', 'multilingual-dictionary' ),
+		'not_found_in_trash' => __( 'No imports found in Trash.', 'multilingual-dictionary' ),
+	);
+
+	$args = array(
+		'labels'             => $labels,
+		'public'             => false,
+		'publicly_queryable' => false,
+		'show_ui'            => false,
+		'show_in_menu'       => false,
+		'query_var'          => false,
+		'rewrite'            => array( 'slug' => 'import', 'with_front' => false ),
+		'capability_type'    => 'post',
+		'has_archive'        => false,
+		'hierarchical'       => false,
+		'menu_position'      => null,
+		'supports'           => array( 'title', )
+	);
+
+	register_post_type( 'mld_import', $args );
+}

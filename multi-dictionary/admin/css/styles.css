@@ -171,12 +171,14 @@ div.mld.updated {
 }
 
 #mld-admin form input[type="text"].mld_term {
-	max-width: 170px;
+	max-width: 160px;
 }
 
 #mld-admin form select.mld_select {
-	max-width: 190px;
-	margin-right: 10px;
+	max-width: 144px;
+	margin-right: 8px;
+	font-size: 12px;
+	line-height: 18px;
 }
 
 @media all and (min-width: 1360px) {
@@ -402,4 +404,138 @@ div.mld.updated {
 
 #mld-admin a {
 	text-decoration: none;
+}
+
+/* Test Import */
+
+.mld-test-import-box {
+	width: 100%;
+	padding: 0 0 15px 0;
+}
+
+table.mld-test-import {
+	width: 350%;
+	padding: 0;
+	margin: 0 0 0 0;
+	border-bottom: 1px solid #666;
+}
+
+table.mld-test-import tr.mld-test-import-heading-row {
+	position: relative;
+}
+
+table.mld-test-import tr.mld-test-import-heading-row td {
+	font-weight: bold;
+}
+
+table.mld-test-import tr {
+	position: relative;
+	margin: 0;
+	padding: 0;
+}
+
+table.mld-test-import tr:last-child {
+
+}
+
+table.mld-test-import tr td {
+	position: relative;
+	padding: 10px;
+	margin: 0;
+	border-top: 1px solid #666;
+	border-left: 1px solid #666;
+}
+
+table.mld-test-import tr td:last-child {
+	border-right: 1px solid #666;
+}
+
+table.mld-test-import tr:last-child td {
+	
+}
+
+table.mld-test-import tr td.term {
+	width: 150px;
+	min-width: 150px;
+	max-width: 150px;
+}
+
+table.mld-test-import tr td.language,
+table.mld-test-import tr td.speech,
+table.mld-test-import tr td.field,
+table.mld-test-import tr td.user {
+	width: 100px;
+	min-width: 100px;
+	max-width: 100px;
+}
+
+table.mld-test-import tr td.definition {
+	width: 500px;
+	min-width: 500px;
+	max-width: 500px;
+}
+
+table.mld-test-import tr td.sources {
+	width: 500px;
+	min-width: 500px;
+	max-width: 500px;
+}
+
+table.mld-test-import tr td.examples {
+	width: 500px;
+	min-width: 500px;
+	max-width: 500px;
+}
+
+table.mld-test-import tr td.notes {
+	width: 250px;
+	min-width: 250px;
+	max-width: 250px;
+}
+
+table.mld-test-import tr td.center {
+	text-align: center;
+}
+
+table.mld-test-import tr td.cell-error {
+	background: #FF9999;
+}
+
+table.mld-test-import tr td .green {
+	color: #009900;
+}
+
+/* Import History */
+
+table.import-history {
+	padding: 0;
+	margin: 0 0 0 0;
+	border-bottom: 1px solid #666;
+	width: 100%;
+}
+
+table.import-history tr.history-import-heading-row td {
+	font-weight: bold;
+}
+
+table.import-history tr {
+	position: relative;
+	margin: 0;
+	padding: 0;
+}
+
+table.import-history tr:last-child {
+
+}
+
+table.import-history tr td {
+	position: relative;
+	padding: 10px;
+	margin: 0;
+	border-top: 1px solid #666;
+	border-left: 1px solid #666;
+}
+
+table.import-history tr td:last-child {
+	border-right: 1px solid #666;
 }

@@ -23,6 +23,7 @@ if ( isset($_POST['mld_add_translation___nonce']) || isset($_POST['mld_edit_tran
 
 	$mld_term = sanitize_text_field( $_POST['mld_term'] );
 	$mld_definition = sanitize_text_field( $_POST['mld_definition'] );
+	$mld_target_language_definition = sanitize_text_field( $_POST['mld_target_language_definition'] );
 		
 	if ( isset($_POST['mld_add_translation___nonce']) ) {
 	
@@ -51,9 +52,13 @@ if ( isset($_POST['mld_add_translation___nonce']) || isset($_POST['mld_edit_tran
 	
 	$data = array(
 		'_mld_translation' => $_POST['mld_translation'],
+		'_mld_source_language_definition' => $_POST['mld_source_language_definition'],
+		'_mld_target_language_definition' => $_POST['mld_target_language_definition'],
 		'_mld_source_language' => $_POST['mld_source_language'],
 		'_mld_translation_language' => $_POST['mld_translation_language'],
 		'_mld_notes' => $_POST['mld_notes'],
+		'_mld_part_speech' => $_POST['mld_part_speech'],
+		'_mld_display_author' => $_POST['mld_display_author'],
 		'_mld_field' => $_POST['mld_field'],
 		'_mld_source' => $_POST['mld_source'],
 		'_mld_source_type' => $_POST['mld_source_type'],
@@ -119,9 +124,13 @@ if ( isset($_GET['edit']) ) {
 	wp_reset_postdata();
 
 	$translation['translation'] = get_post_meta( $translation_id, '_mld_translation', true );
+	$translation['target_language_definition'] = get_post_meta( $translation_id, '_mld_target_language_definition', true );
+	$translation['source_language_definition'] = get_post_meta( $translation_id, '_mld_source_language_definition', true );
 	$translation['source_language'] = get_post_meta( $translation_id, '_mld_source_language', true );
 	$translation['translation_language'] = get_post_meta( $translation_id, '_mld_translation_language', true );
 	$translation['notes'] = get_post_meta( $translation_id, '_mld_notes', true );
+	$translation['part_speech'] = get_post_meta( $translation_id, '_mld_part_speech', true );
+	$translation['display_author'] = get_post_meta( $translation_id, '_mld_display_author', true );
 	$translation['field'] = get_post_meta( $translation_id, '_mld_field', true );
 	$translation['source'] = get_post_meta( $translation_id, '_mld_source', false ); // Multiple entries possible
 	$translation['source_type'] = get_post_meta( $translation_id, '_mld_source_type', false ); // Multiple entries possible
@@ -141,7 +150,11 @@ if ( isset($_GET['edit']) ) {
 		'source_language',
 		'translation_language',
 		'translation',
+		'source_language_definition',
+		'target_language_definition',
 		'notes',
+		'part_speech',
+		'display_author',
 		'field',
 		'source' => array(),
 		'source_type' => array(),
@@ -190,8 +203,9 @@ if ( isset($term_approval_status) ){
         <input class="error" type="text" id="mld_translation" name="mld_translation" value="<?php echo esc_attr( $translation['translation'] ); ?>" size="25" /><br/>
 	</div>
 	<hr/>
+    
+<?php	
 
-<?php
 // Source Language			
 	
 	// Retrive the languages that have been set
@@ -230,10 +244,10 @@ if ( isset($term_approval_status) ){
 ?>	
 	<div class="mld_translation_language">
 
-        <label for="mld_translation_language"><?php _e( 'Translation Language: ', 'multilingual-dictionary' ); ?></label>
+        <label for="mld_translation_language"><?php _e( 'Target Language: ', 'multilingual-dictionary' ); ?></label>
         
         <select id="mld_translation_language" name="mld_translation_language">
-        <option <?php echo $default_selected; ?>>Select Translation Language</option>
+        <option <?php echo $default_selected; ?>>Select Target Language</option>
 
 <?php
 		if ( $languages_query->have_posts() ) {
@@ -281,6 +295,36 @@ if ( isset($term_approval_status) ){
 ?>	
         </select><br/>
     </div>
+
+<?php
+    
+// Part of Speech
+	
+	// Retrive the Parts of Speech that have been set
+	$args = array( 'post_type' => 'mld_part_speech', 'orderby' => 'title', 'order' => 'ASC' );
+	$part_speech_query = new WP_Query( $args );
+?>	
+	<div class="mld_part_speech">
+    
+        <label for="mld_part_speech"><?php _e( 'Part of Speech: ', 'multilingual-dictionary' ); ?></label>
+    
+        <select id="mld_part_speech" name="mld_part_speech">
+        <option <?php echo $default_selected; ?>>Select Part of Speech</option>
+    
+<?php
+		if ( $part_speech_query->have_posts() ) {
+			while ( $part_speech_query->have_posts() ) {
+				$part_speech_query->the_post();
+				$selected = false;
+				if ($part_speech_query->post->ID == esc_attr( $translation['part_speech'] ) ) { 
+					$selected = ' selected '; 
+				}
+				echo '<option '.$selected.' value="'.$part_speech_query->post->ID.'">'.get_the_title().'</option>';
+			}
+		}
+?>	
+        </select><br/>
+    </div>    
     <hr/>
 
 <?php
@@ -292,6 +336,21 @@ if ( isset($term_approval_status) ){
         <textarea id="mld_definition" name="mld_definition"><?php echo $term_definition; ?></textarea><br/>
 
 	</div>
+    
+	<div class="mld_source_language_definition">
+
+        <label for="mld_source_language_definition"><?php _e( '<span>Source Language</span> Definition: ', 'multilingual-dictionary' ); ?></label>
+        <textarea id="mld_source_language_definition" name="mld_source_language_definition"><?php echo $translation['source_language_definition']; ?></textarea><br/>
+
+	</div>
+
+	<div class="mld_target_language_definition">
+
+        <label for="mld_target_language_definition"><?php _e( '<span>Target Language</span> Definition: ', 'multilingual-dictionary' ); ?></label>
+        <textarea id="mld_target_language_definition" name="mld_target_language_definition"><?php echo $translation['target_language_definition']; ?></textarea><br/>
+
+	</div>
+    
 	<hr/>
 
 <?php	
@@ -389,6 +448,16 @@ if ( isset($term_approval_status) ){
 	<label for="mld_notes"><?php _e( 'Notes: ', 'multilingual-dictionary' ); ?></label>
 	
     <textarea id="mld_notes" name="mld_notes"><?php echo esc_attr( $translation['notes'] ); ?></textarea><br/>
+    
+   	<div class="mld_display_author">
+
+        <input type="hidden" name="mld_display_author" value="0" />
+        <label for="mld_display_author" style="position: relative; top: -10px; display: inline-block; max-width: none; width: 100%;"><?php _e( 'Would you like your name to be shown publicly as the author of this translation? ', 'multilingual-dictionary' ); ?>
+        <br/><br/>
+        <input <?php if ( $translation['display_author'] == 1 ) { echo 'checked="checked"'; } ?> style="display: inline; width: auto; position: relative; margin: 0 5px 0 0;" type="checkbox" value="1" class="form-control" id="mld_display_author" name="mld_display_author" /> <em>Yes, please display my name.</em><br/>
+		</label>
+	</div>
+
 
 <?php	
 	// Reset post
@@ -506,7 +575,82 @@ jQuery('document').ready(function(){
 		if (usage_example_count == 5) {
 			jQuery('a.mld_add-usage-example').hide();
 		}
-	});		
+	});
+	
+	
+	
+	hide_source_language_definition();
+	hide_target_language_definition();
+		
+	// Hide Source Language Definition Fields if English is selected for source language
+	jQuery('#mld_source_language').change(function(){
+		hide_source_language_definition();
+		alert_on_same_language();		
+	});
+	
+	// Hide Target Language Definition Fields if English is selected for target language
+	jQuery('#mld_translation_language').change(function(){
+		alert_on_same_language();
+		hide_target_language_definition();
+	});
+
+	function hide_source_language_definition() {
+
+		var selected_language_id = jQuery("#mld_source_language").val();
+		var selected_language = jQuery("#mld_source_language option[value='"+selected_language_id+"']").text()
+		
+		// Update the label text
+		if ( !isNaN(parseFloat(selected_language_id)) && isFinite(selected_language_id) ) {
+			jQuery('div.mld_source_language_definition label span').html(selected_language);
+		} else {
+			jQuery('div.mld_source_language_definition label span').html('Source Language');
+		}
+		
+		// Hide the definition if English	
+		if ( selected_language == 'English' ) {
+			jQuery('div.mld_source_language_definition').hide();
+		} else {
+			jQuery('div.mld_source_language_definition').show();
+		}
+		
+	}
+
+	function hide_target_language_definition() {
+		
+		var selected_language_id = jQuery("#mld_translation_language").val();
+		var selected_language = jQuery("#mld_translation_language option[value='"+selected_language_id+"']").text()
+
+		// Update the label text
+		if ( !isNaN(parseFloat(selected_language_id)) && isFinite(selected_language_id) ) {
+			jQuery('div.mld_target_language_definition label span').html(selected_language);
+		} else {
+			jQuery('div.mld_target_language_definition label span').html('Target Language');
+		}
+		
+		// Hide the definition if English	
+		if ( selected_language == 'English' ) {
+			jQuery('div.mld_target_language_definition').hide();
+		} else {
+			jQuery('div.mld_target_language_definition').show();
+		}
+		
+	}
+	
+	function alert_on_same_language() {
+		
+		var source_language = jQuery('select[name="mld_source_language"]').val();
+		var translation_language = jQuery('select[name="mld_translation_language"]').val();
+
+		if (translation_language == source_language) {
+			jQuery('.mld_source_language').addClass('error-alert');
+			jQuery('.mld_translation_language').addClass('error-alert');
+		} else {
+			jQuery('.mld_source_language').removeClass('error-alert');
+			jQuery('.mld_translation_language').removeClass('error-alert');	
+		}
+	
+	}
+	
 
 });
 

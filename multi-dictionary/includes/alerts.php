@@ -75,11 +75,32 @@ if ( isset($_GET['delete-translation']) ) {
 
 function translation_imported_notice() {
 
-	$count = $_GET['mld_imported'];
+	$count = (int) $_GET['mld_imported'];
+	$errors = (int) $_GET['mld_errored'];
+	
+	$count = $count - $errors;
     ?>
     <div class="updated mld">
         <p><?php echo $count; ?> Translations have been imported.</p>
     </div>
+    <?php
+	if ($errors > 0) {
+	?>
+    <div class="error mld">
+        <p style="color: #ff0000;"><?php echo $errors; ?> Translations failed to import:</p>
+        <?php
+        if ( isset($_SESSION) && is_array($_SESSION['error_rows']) ) {
+            echo '<ol>';
+            foreach ( $_SESSION['error_rows'] as $term_and_row => $error_text ) {
+                echo '<li><strong>'.$term_and_row. ':</strong> <br/>' . $error_text . '  </li>';
+            }
+            echo '</ol>';
+        }
+        ?>            
+    </div>
+    <?php
+	}
+	?>
     <?php
 }
  

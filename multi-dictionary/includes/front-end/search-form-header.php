@@ -10,7 +10,7 @@
 <form id="mld_search" class="mld_search_header" name="mld_search" action="" method="post" enctype="multipart/form-data">
     <input type="hidden" id="mld_search_performed" name="mld_search_performed" />
 
-        <input type="text" id="mld_term" name="mld_term" class="form-control" value="<?php echo $GLOBALS['mld_dictionary']->term['name']; ?>" placeholder="search linguistic term" />
+        <input type="text" id="mld_term" name="mld_term" class="form-control" value="<?php echo $GLOBALS['mld_dictionary']->term['name']; ?>" placeholder="enter search text" />
         
         <div class="mld_no_wrap">
         

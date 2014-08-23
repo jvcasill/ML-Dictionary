@@ -64,3 +64,25 @@ function mld_add_translation_styled_shortcode(  ) {
 }
  
 add_shortcode('mld_add_translation_ling', 'mld_add_translation_styled_shortcode');
+
+/**
+ * Total Term Count Shortcode
+ */
+ 
+function mld_total_term_count_shortcode(  ) {
+	include ABSPATH . 'wp-content/plugins/multi-dictionary/includes/front-end/total-term-count.php';
+	return $total_term_count;
+}
+ 
+add_shortcode('mld_total_term_count', 'mld_total_term_count_shortcode');
+
+/**
+ * Leaderboard Shortcode
+ */
+ 
+function mld_leaderboard_shortcode(  ) {
+	include ABSPATH . 'wp-content/plugins/multi-dictionary/includes/front-end/leaderboard.php';
+	return $leaderboard;
+}
+ 
+add_shortcode('mld_leaderboard', 'mld_leaderboard_shortcode');

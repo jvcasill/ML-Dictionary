@@ -87,6 +87,8 @@ if ( isset($_POST['mld_add_translation___nonce']) ) {
 		'_mld_source_language' => $_POST['mld_source_language'],
 		'_mld_translation_language' => $_POST['mld_translation_language'],
 		'_mld_notes' => $_POST['mld_notes'],
+		'_mld_part_speech' => $_POST['mld_part_speech'],
+		'_mld_target_language_definition' => $_POST['mld_target_language_definition'],
 		'_mld_field' => $_POST['mld_field'],
 		'_mld_source' => $_POST['mld_source'],
 		'_mld_source_type' => $_POST['mld_source_type'],
@@ -116,6 +118,8 @@ if ( isset($_POST['mld_add_translation___nonce']) ) {
 	add_post_meta($translation_id, '_mld_approved', 0);
 	
 	$mld_translation_added = true;
+	
+	do_action('mld_submit_translation');
 
 }
 
@@ -186,6 +190,23 @@ if ( isset($_POST['mld_add_translation___nonce']) ) {
 ?>
         </select><br/>
     </div>
+    
+<?php	
+// Part of Speech	
+?>	
+	<div class="mld_part_speech">
+    
+        <label for="mld_part_speech"><?php _e( 'Part of Speech: ', 'multilingual-dictionary' ); ?></label>
+    
+        <select class="form-control" id="mld_part_speech" name="mld_part_speech">
+        <option>Select Part of Speech</option>
+    
+<?php
+		$GLOBALS['mld_dictionary']->display_parts_speech_select_options();
+?>	
+        </select><br/>
+    </div>
+    
 <?php	
 // Field	
 ?>	
@@ -209,6 +230,16 @@ if ( isset($_POST['mld_add_translation___nonce']) ) {
 
         <label for="mld_definition"><?php _e( 'English Definition: ', 'multilingual-dictionary' ); ?></label>
         <textarea id="mld_definition" name="mld_definition"></textarea><br/>
+
+	</div>
+
+<?php
+// Target Language Definition
+?>
+	<div class="mld_target_language_definition">
+
+        <label for="mld_target_language_definition"><?php _e( 'Target Language Definition: ', 'multilingual-dictionary' ); ?></label>
+        <textarea class="form-control" id="mld_target_language_definition" name="mld_target_language_definition" placeholder="Enter term description (in target language)"></textarea><br/>
 
 	</div>
 
@@ -254,6 +285,17 @@ if ( isset($_POST['mld_add_translation___nonce']) ) {
     <textarea id="mld_notes" name="mld_notes"></textarea>
         
     <p class="mld_share_notes">Please share any comments or relevant notes regarding your translation here.</p>
+
+<?php
+// Display Author Name Check
+?>
+	<div class="mld_display_author">
+
+        <label for="mld_display_author" ><?php _e( 'Would you like your name to be shown publicly as the author of this translation? ', 'multilingual-dictionary' ); ?></label>
+        <input type="hidden" name="mld_display_author" value="0" />
+        <input type="checkbox" value="1" class="form-control" id="mld_display_author" name="mld_display_author" /><br/>
+
+	</div>
  
 <?php
 // Captcha

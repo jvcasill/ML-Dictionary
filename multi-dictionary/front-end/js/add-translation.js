@@ -119,8 +119,8 @@ jQuery('document').ready(function(){
 		if (usage_example_count == 4) {
 			jQuery('a.mld_add-usage-example').hide();
 		}
-	});		
-
+	});
+	
 });
 
 // Voting logged in check
@@ -139,4 +139,82 @@ jQuery('.mld_vote_block a').click(function(event){
 		});
 		
 	}
+});
+
+
+// Definition Fields Checking/Hiding based on language selections
+jQuery(document).ready(function(){
+								
+	hide_source_language_definition();
+	hide_target_language_definition();
+		
+	// Hide Source Language Definition Fields if English is selected for source language
+	jQuery('#mld_source_language.add-trans-field').change(function(){
+		hide_source_language_definition();
+		alert_on_same_language();		
+	});
+	
+	// Hide Target Language Definition Fields if English is selected for target language
+	jQuery('#mld_translation_language.add-trans-field').change(function(){
+		alert_on_same_language();
+		hide_target_language_definition();
+	});
+
+	function hide_source_language_definition() {
+
+		var selected_language_id = jQuery("#mld_source_language.add-trans-field").val();
+		var selected_language = jQuery("#mld_source_language.add-trans-field option[value='"+selected_language_id+"']").text()
+		
+		// Update the label text
+		if ( !isNaN(parseFloat(selected_language_id)) && isFinite(selected_language_id) && selected_language_id != 'false' ) {
+			jQuery('div.mld_source_language_definition label span').html(selected_language);
+		} else {
+			jQuery('div.mld_source_language_definition label span').html('Source Language');
+		}
+		
+		// Hide the definition if English	
+		if ( selected_language == 'English' ) {
+			jQuery('div.mld_source_language_definition').hide();
+		} else {
+			jQuery('div.mld_source_language_definition').show();
+		}
+		
+	}
+
+	function hide_target_language_definition() {
+		
+		var selected_language_id = jQuery("#mld_translation_language.add-trans-field").val();
+		var selected_language = jQuery("#mld_translation_language.add-trans-field option[value='"+selected_language_id+"']").text()
+
+		// Update the label text
+		if ( !isNaN(parseFloat(selected_language_id)) && isFinite(selected_language_id) && selected_language_id != 'false' ) {
+			jQuery('div.mld_target_language_definition label span').html(selected_language);
+		} else {
+			jQuery('div.mld_target_language_definition label span').html('Target Language');
+		}
+		
+		// Hide the definition if English	
+		if ( selected_language == 'English' ) {
+			jQuery('div.mld_target_language_definition').hide();
+		} else {
+			jQuery('div.mld_target_language_definition').show();
+		}
+		
+	}
+	
+	function alert_on_same_language() {
+		
+		var source_language = jQuery('select.add-trans-field[name="mld_source_language"]').val();
+		var translation_language = jQuery('select.add-trans-field[name="mld_translation_language"]').val();
+
+		if (translation_language == source_language) {
+			jQuery('.mld_source_language').addClass('error-alert');
+			jQuery('.mld_translation_language').addClass('error-alert');
+		} else {
+			jQuery('.mld_source_language').removeClass('error-alert');
+			jQuery('.mld_translation_language').removeClass('error-alert');	
+		}
+	
+	}
+	
 });
